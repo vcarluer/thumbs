@@ -1,6 +1,11 @@
 import sys
 import pyparams
+import os
+import logging
 
+logging.basicConfig(level = logging.DEBUG)
+
+logging.debug("Initializing pyparams")
 CONF= pyparams.Conf(
         conf_file_parameter         = "configfile",
         default_conf_file_locations = ["/etc/thumbs"],
@@ -27,7 +32,14 @@ print("--------------------------------------------------------")
 
 def main():
     CONF.acquire(sys.argv[1:])
-    print(CONF.get("filePath"))
+    if CONF.get("filePath"):
+        filePath = CONF.get("filePath")
+        logging.debug("file path mode: {}".format(filePath))
+        print("Scanning file path: {}".format(filePath))
+        if not os.path.isfile(filePath):
+            print("Not a file path")
+            sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
