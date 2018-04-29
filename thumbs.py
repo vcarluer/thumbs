@@ -2,7 +2,7 @@ import sys
 import pyparams #https://github.com/jbrendel/pyparams
 import os
 import logging
-from PIL import image #https://pillow.readthedocs.io/en/3.1.x/reference/Image.html
+from PIL import Image #https://pillow.readthedocs.io/en/3.1.x/reference/Image.html
 
 logging.basicConfig(level = logging.DEBUG)
 BASE_STORAGE = "/var/local/thumbs"
@@ -29,13 +29,13 @@ CONF= pyparams.Conf(
                 "cmd_line"  : ('p', 'filePath')
                 },
             "force" : {
-                "default"   : None,
-                "param_type": param.PARAM_TYPE_BOOL,
+                "default"   : False,
+                "param_type": pyparams.PARAM_TYPE_BOOL,
                 "cmd_line"  : ('f', 'force')
                 },
             "size" : {
                 "default"   : 128,
-                "param_type": param.PARAM_TYPE_INT,
+                "param_type": pyparams.PARAM_TYPE_INT,
                 "cmd_line"  : ('s', 'size')
                 }
             }
@@ -60,21 +60,26 @@ def thumb_file(filePath):
     if not os.path.isfile(filePath):
         logging.info("Not a file path")
         sys.exit(1)
-    filename, extension = os.path.splitex(filePath)
-    if not extension == "jpg":
+    filename, extension = os.path.splitext(filePath)
+    if not extension == ".jpg":
         logging.info("Bad file extension. Only jpg supported")
         sys.exit(1)
-    dirPath = os.path.dirname(filePath)
+    logging.debug("Removing heading / to join path")
+    logging.debug("Removing heading / to join path")
+    refPath = filePath[1:]
+    dirPath = os.path.dirname(refPath)
     targetPath = os.path.join(BASE_STORAGE, dirPath)
+    logging.debug("Target directory path: {}".format(targetPath))
     if not os.path.exists(targetPath):
         logging.debug("Creating target directory {}".format(targetPath))
         os.makedirs(targetPath)
-    targetFile = os.path.join(BASE_STORAGE, filePath)
+    targetFile = os.path.join(BASE_STORAGE, refPath)
+    logging.debug("Target file: {}".format(targetFile))
     force = CONF.get("force")
     if os.path.exists(targetFile):
         if not force:
             logging.warning("File already exist: skipping it. Use -f to force")
-            sys.Exit(1)
+            sys.exit(1)
         else:
             logging.debug("Force overwrite of {}".format(targetFile))
     thumb_image_secured(filePath, targetFile)
