@@ -19,6 +19,11 @@ CONF= pyparams.Conf(
                 }
             }
         )
+print("THUMBS")
+print("--------------------------------------------------------")
+print("Available parameters:")
+print(CONF.make_doc())
+print("--------------------------------------------------------")
 
 def main():
     CONF.acquire(sys.argv[1:])
