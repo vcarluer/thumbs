@@ -3,6 +3,7 @@ import pyparams #https://github.com/jbrendel/pyparams
 import os
 import logging
 from PIL import Image #https://pillow.readthedocs.io/en/3.1.x/reference/Image.html
+import glob
 
 logging.basicConfig(level = logging.DEBUG)
 BASE_STORAGE = "/var/local/thumbs"
@@ -24,7 +25,7 @@ CONF= pyparams.Conf(
                 "cmd_line"  : ('b', 'baseStorage')
             },
             "filePath" : {
-                "default"   : None,
+                "default"   : "",
                 "conffile"  : None,
                 "cmd_line"  : ('p', 'filePath')
                 },
@@ -52,8 +53,17 @@ BASE_STORAGE = CONF.get("baseStorage")
 def main():
     if CONF.get("filePath"):
         filePath = CONF.get("filePath")
-        logging.debug("file path mode: {}".format(filePath))
-        thumb_file(filePath)
+        if os.path.isdir(filePath):
+            logging.debug("dir path mode: {}".format(filePath))
+            thumb_dir(filePath)
+        else:
+            logging.debug("file path mode: {}".format(filePath))
+            thumb_file(filePath)
+
+def thumb_dir(dirPath):
+    globPattern = dirPath + "/**/*.jpg"
+    for infile in glob.glob(globPattern, recursive=True):
+        thumb_file(infile)
 
 def thumb_file(filePath):
     logging.info("Scanning file path: {}".format(filePath))
@@ -65,7 +75,6 @@ def thumb_file(filePath):
         logging.info("Bad file extension. Only jpg supported")
         sys.exit(1)
     logging.debug("Removing heading / to join path")
-    logging.debug("Removing heading / to join path")
     refPath = filePath[1:]
     dirPath = os.path.dirname(refPath)
     targetPath = os.path.join(BASE_STORAGE, dirPath)
@@ -76,13 +85,15 @@ def thumb_file(filePath):
     targetFile = os.path.join(BASE_STORAGE, refPath)
     logging.debug("Target file: {}".format(targetFile))
     force = CONF.get("force")
+    doThumb = True
     if os.path.exists(targetFile):
         if not force:
-            logging.warning("File already exist: skipping it. Use -f to force")
-            sys.exit(1)
+            logging.debug("File already exist: skipping it. Use -f to force")
+            doThumb = False
         else:
             logging.debug("Force overwrite of {}".format(targetFile))
-    thumb_image_secured(filePath, targetFile)
+    if doThumb:
+        thumb_image_secured(filePath, targetFile)
 
 # All parameters must have been properly checked before calling this function
 def thumb_image_secured(source, target):
